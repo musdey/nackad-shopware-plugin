@@ -1,0 +1,161 @@
+{extends file="parent:frontend/checkout/confirm.tpl"}
+
+{block name='frontend_checkout_confirm_tos_panel'}
+
+    <style>
+        .nack-deliveryslot-container {
+            min-width: 250px;
+            width: 75%;
+            margin: 0 auto;
+        }
+
+        .nack-date {
+            width: 25%;
+            height: 10px;
+            min-height: 25px;
+        }
+
+        .nack-header {
+            width: 100%
+        }
+
+        .nack-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .nack-button {
+            margin: 5px;
+            width: 20%;
+            height: 30px;
+            border-radius: 10px;
+            background: #e58c7a;
+            border-color: unset;
+            color: white;
+            border-style: hidden;
+            cursor: pointer;
+            vertical-align: -webkit-baseline-middle;
+            display:flex;
+            justify-content: space-evenly;
+        }
+
+        .nack-input {
+            vertical-align: -webkit-baseline-middle;
+            align-self: center;
+        }
+
+    </style>
+
+    <div class="tos--panel panel has--border">
+        <div class="panel--title primary is--underline">
+            Lieferslots auswählen
+        </div>
+        <div class="panel--body is--wide">
+            <div class="body--revocation" data-modalbox="true" data-targetselector="a" data-mode="ajax" data-height="500" data-width="750">
+                Bitte wähle deinen gewünschten Lieferslot für deinen Bezirk : {$postal}
+            </div>
+
+            <div class="nack-deliveryslot-container">
+                <div id="nack-elements">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var data = {$deliverySlots};
+        var PLZ = {$postal};
+
+        console.log(PLZ);
+        // var addresses = document.getElementsByClassName("address--zipcode");
+        // console.log(addresses);
+        // if(addresses.length === 2 ){
+        //     var ship = addresses[1].textContent;
+        //     console.log(ship);
+        //     console.log(PLZ);
+        //     if(ship !== PLZ){
+        //         console.log("passt nicht");
+        //     }
+        // }
+
+        var count = 0;
+        var curDay = new Date(data[0].deliveryDay).getDay();
+        var elem = document.createElement('div');
+        var options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        var options2 = {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric'
+        };
+        elem.className = "nack-container";
+
+        data.forEach((obj, index) => {
+            if (obj.deliveryAreas.includes(PLZ) && obj.available > 0) {
+
+                if (index === 0) {
+
+                    var div = document.createElement("div");
+                    div.className = "nack-header";
+                    div.innerText = new Date(data[0].deliveryDay).toLocaleDateString('de-AT', options);
+                    elem.appendChild(div);
+
+                    var padding = document.createElement("div");
+                    padding.className = "nack-date";
+                    elem.appendChild(padding);
+                }
+
+                if (count == 3) {
+                    var pad = document.createElement("div");
+                    pad.className = "nack-date";
+                    elem.appendChild(pad);
+                    count = 0;
+                }
+                var incomingDay = new Date(obj.deliveryDay).getDay();
+
+                if (curDay != incomingDay) {
+                    var newContent = document.createElement("div");
+                    newContent.className = "nack-header";
+                    newContent.innerText = new Date(obj.deliveryDay).toLocaleDateString('de-AT', options);
+                    elem.appendChild(newContent);
+
+                    var pad3 = document.createElement("div");
+                    pad3.className = "nack-date";
+                    elem.appendChild(pad3);
+                    curDay = incomingDay;
+                    count = 0;
+                }
+                var newInput = document.createElement("input");
+                var id = "input-" + incomingDay + "-" + obj.slotHours;
+                newInput.id = id;
+                newInput.className = "nack-input";
+                newInput.type = "radio";
+                newInput.name = "deliverySlot";
+                newInput.value = new Date(obj.deliveryDay).toLocaleDateString('de-AT', options2)+"x"+obj.slotHours;
+                newInput.for="deliverySlot";
+                newInput.required=true;
+                var labelText = document.createElement("div");
+                labelText.innerText = obj.slotHours;
+                labelText.className = "nack-input";
+
+                var newLabel = document.createElement("label");
+                newLabel.for = id;
+                newLabel.className = "nack-button";
+                newLabel.appendChild(newInput);
+                newLabel.appendChild(labelText);
+                elem.appendChild(newLabel);
+                count++;
+            }
+        });
+
+        var finalDestination = document.getElementById('nack-elements');
+        finalDestination.appendChild(elem);
+    </script>
+
+    {$smarty.block.parent}
+
+{/block}
