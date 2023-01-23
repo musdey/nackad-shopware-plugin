@@ -14,7 +14,7 @@ class RouteSubscriber implements SubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'Enlight_Controller_Action_PreDispatch' => 'onPostDispatch',
+            'Enlight_Controller_Action_PostDispatchSecure_Frontend_Checkout' => 'onPostDispatch',
         ];
     }
     public function __construct($pluginName, $pluginDirectory, DeliverySlot $deliverySlot, ConfigReader $configReader)

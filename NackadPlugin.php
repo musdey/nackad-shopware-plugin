@@ -25,8 +25,21 @@ class NackadPlugin extends Plugin
     public static function getSubscribedEvents(): array
     {
         return [
-            'Enlight_Controller_Action_Frontend_Checkout_Finish' => 'onPostDispatchCheckout',
+            'Enlight_Controller_Action_Frontend_Checkout_Finish' => 'onPostDispatchCheckout'
         ];
+    }
+
+    public function onPostDispatchOrder(\Enlight_Controller_ActionEventArgs $args)
+    {
+
+        $controller = $args->getSubject();
+        $request = $controller->Request();
+        $view = $controller->View();
+
+        $view->addTemplateDir(__DIR__ . '/Resources/views/');
+        if ($request->getActionName() == 'load') {
+            $view->extendsTemplate('backend/order/view/list.js');
+        }
     }
 
     public function onPostDispatchCheckout(Enlight_Controller_ActionEventArgs $args){
@@ -40,7 +53,9 @@ class NackadPlugin extends Plugin
         /** @var $response Enlight_Controller_Response_ResponseHttp */
         $response = $args->getResponse();
 
+        $orderNumber = Shopware()->Modules()->Order()->sGetOrderNumber();
         $deliverySlot = $enlightController->Request()->getParam('deliverySlot', '');
+        $userComment = $enlightController->Request()->getParam('sComment','');
 
         $deliveryValues = explode("x",$deliverySlot);
         $deliveryDay = $deliveryValues[0];
@@ -54,17 +69,17 @@ class NackadPlugin extends Plugin
         $sessionData = $_SESSION;
         $sessionData["deliveryDay"] = $deliveryDay;
         $sessionData["slotHours"] = $slotHours;
+        $sessionData["userComment"] = $userComment;
+        $sessionData["orderNumber"] = $orderNumber;
 
-        $this->httpPost('http://localhost:3000/api/v1/webhooks/new-rexeat-order', $sessionData);
+        $this->httpPost('https://app.nackad.at/api/v1/webhooks/new-rexeat-order', $sessionData);
     }
 
     public function httpPost($url, $data)
     {
+        $data["Shopware"]["sOrderVariables"]["sUserData"]["additional"]["user"]["password"] = "XXXX";
         // Convert the data array into a JSON string
         $jsonData = json_encode($data,JSON_PRETTY_PRINT) ;
-        dump($data);
-        //dump($data);
-        //die(PHP_EOL . '<br>die: ' . __FUNCTION__ . ' / ' . __FILE__ . ' / ' . __LINE__);
 
         // Set up the cURL request
         $ch = curl_init($url);
@@ -76,7 +91,7 @@ class NackadPlugin extends Plugin
         curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
 
         // Set the content type to application/json
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json','x-webhook-key:2x+rDeG%C@aZ3Xnu5g6C&sg85dYPDDqn']);
 
         // Execute the request
         $response = curl_exec($ch);

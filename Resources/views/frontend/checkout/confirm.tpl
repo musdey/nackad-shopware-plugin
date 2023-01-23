@@ -51,7 +51,7 @@
             Lieferslots auswählen
         </div>
         <div class="panel--body is--wide">
-            <div class="body--revocation" data-modalbox="true" data-targetselector="a" data-mode="ajax" data-height="500" data-width="750">
+            <div id="slotheader" class="body--revocation" data-modalbox="true" data-targetselector="a" data-mode="ajax" data-height="500" data-width="750">
                 Bitte wähle deinen gewünschten Lieferslot für deinen Bezirk : {$postal}
             </div>
 
@@ -65,18 +65,6 @@
     <script>
         var data = {$deliverySlots};
         var PLZ = {$postal};
-
-        console.log(PLZ);
-        // var addresses = document.getElementsByClassName("address--zipcode");
-        // console.log(addresses);
-        // if(addresses.length === 2 ){
-        //     var ship = addresses[1].textContent;
-        //     console.log(ship);
-        //     console.log(PLZ);
-        //     if(ship !== PLZ){
-        //         console.log("passt nicht");
-        //     }
-        // }
 
         var count = 0;
         var curDay = new Date(data[0].deliveryDay).getDay();
@@ -94,6 +82,7 @@
         };
         elem.className = "nack-container";
 
+        console.log(data.length);
         data.forEach((obj, index) => {
             if (obj.deliveryAreas.includes(PLZ) && obj.available > 0) {
 
@@ -152,8 +141,18 @@
             }
         });
 
-        var finalDestination = document.getElementById('nack-elements');
-        finalDestination.appendChild(elem);
+        var final = document.getElementById('nack-elements');
+        final.appendChild(elem);
+        console.log(elem.childElementCount);
+        if(elem.childElementCount == 0){
+            var header = document.getElementById("slotheader");
+            header.textContent = "Es stehen für deinen Bezirk ("+PLZ+") leider keine Lieferslots mehr zur Verfügung. Bitte melde dich bei uns im Office unter +43 676 54 18 945.";
+            var hiddenInput = document.createElement("input");
+            hiddenInput.required=true;
+            hiddenInput.name="hiddenInput";
+            hiddenInput.style="opacity: 0;";
+            header.append(hiddenInput);
+        }
     </script>
 
     {$smarty.block.parent}

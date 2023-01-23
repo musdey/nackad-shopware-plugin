@@ -2,16 +2,19 @@
 
 namespace NackadPlugin\Components;
 
+use Doctrine\DBAL\Driver\Exception;
+
 class DeliverySlot
 {
     public function getDeliveryPostalCode() {
-        $postal = $_SESSION["Shopware"]["sOrderVariables"]["sUserData"]["shippingaddress"]["zipcode"];
-        if($postal == null) {
-            $postal = $_SESSION["Shopware"]["sOrderVariables"]["sUserData"]["billingaddress"]["zipcode"];
+        try {
+            $userData = Shopware()->Modules()->Admin()->sGetUserData();
+            $postal = $userData["shippingaddress"]["zipcode"];
+            return $postal;
+        }catch(Exception $exception){
+            // execptions
         }
-        return $postal;
     }
-
     public function getDeliverySlots(){
 
         // Set up the cURL request
@@ -33,7 +36,7 @@ class DeliverySlot
         curl_close($ch);
 
         // $data = json_decode($response);
-/*        dump($data);
+/*      dump($data);
         die(PHP_EOL . '<br>die: ' . __FUNCTION__ . ' / ' . __FILE__ . ' / ' . __LINE__);*/
 
         return $response;
