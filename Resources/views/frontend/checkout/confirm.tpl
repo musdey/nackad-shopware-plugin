@@ -82,7 +82,6 @@
         };
         elem.className = "nack-container";
 
-        console.log(data.length);
         data.forEach((obj, index) => {
             if (obj.deliveryAreas.includes(PLZ) && obj.available > 0) {
 
@@ -143,7 +142,6 @@
 
         var final = document.getElementById('nack-elements');
         final.appendChild(elem);
-        console.log(elem.childElementCount);
         if(elem.childElementCount == 0){
             var header = document.getElementById("slotheader");
             header.textContent = "Es stehen für deinen Bezirk ("+PLZ+") leider keine Lieferslots mehr zur Verfügung. Bitte melde dich bei uns im Office unter +43 676 54 18 945.";
