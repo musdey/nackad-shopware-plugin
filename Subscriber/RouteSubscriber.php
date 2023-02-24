@@ -1,8 +1,8 @@
 <?php
 namespace NackadPlugin\Subscriber;
 
-use NackadPlugin\Components\DeliverySlot;
 use Enlight\Event\SubscriberInterface;
+use NackadPlugin\Components\DeliverySlot;
 use Shopware\Components\Plugin\ConfigReader;
 
 class RouteSubscriber implements SubscriberInterface
@@ -21,7 +21,6 @@ class RouteSubscriber implements SubscriberInterface
     {
         $this->pluginDirectory = $pluginDirectory;
         $this->deliverySlot = $deliverySlot;
-
         $this->config = $configReader->getByPluginName($pluginName);
     }
 
@@ -32,10 +31,6 @@ class RouteSubscriber implements SubscriberInterface
         $view = $controller->View();
 
         $view->addTemplateDir($this->pluginDirectory . '/Resources/views/');
-
-        $view->assign('swagSloganFontSize', $this->config['swagSloganFontSize']);
-        $view->assign('swagSloganItalic', $this->config['swagSloganItalic']);
-        $view->assign('swagSloganContent', $this->config['swagSloganContent']);
 
         if (!$this->config['nackadContent']) {
             $view->assign('postal', $this->deliverySlot->getDeliveryPostalCode());

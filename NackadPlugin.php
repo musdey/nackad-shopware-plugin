@@ -20,12 +20,16 @@ class NackadPlugin extends Plugin
             'label' => 'Zeitslot',
             'displayInBackend' => true
         ]);
+        // Rebuild attribute models
+        /** @var ModelManager $modelManager */
+        $modelManager = $this->container->get('models');
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
-            'Enlight_Controller_Action_Frontend_Checkout_Finish' => 'onPostDispatchCheckout'
+            'Enlight_Controller_Action_Frontend_Checkout_Finish' => 'onPostDispatchCheckout',
+            'Shopware_Modules_Order_SaveOrder_FilterParams' => 'saveOrderFilterParams',
         ];
     }
 
@@ -53,34 +57,59 @@ class NackadPlugin extends Plugin
         /** @var $response Enlight_Controller_Response_ResponseHttp */
         $response = $args->getResponse();
 
+        $sessionData = Shopware()->Session();
+        $deliverySlot = Shopware()->Session()->deliverySlot;
         $orderNumber = Shopware()->Modules()->Order()->sGetOrderNumber();
-        $deliverySlot = $enlightController->Request()->getParam('deliverySlot', '');
-        $userComment = $enlightController->Request()->getParam('sComment','');
+        $userComment = Shopware()->Session()->sComment;
+        $order = Shopware()->Modules()->Order();
+
+/*        if(!$orderComment){
+            $orderComment = $sessionData
+        }*/
+
+/*        $deliverySlot = $enlightController->Request()->getParam('deliverySlot', '');
+          $userComment = $enlightController->Request()->getParam('sComment','');*/
 
         $deliveryValues = explode("x",$deliverySlot);
         $deliveryDay = $deliveryValues[0];
         $slotHours = $deliveryValues[1];
-        $order = Shopware()->Modules()->Order();
-        if (!empty($order)) {
-            $order->orderAttributes['delivery_day'] = $deliveryDay ;
-            $order->orderAttributes['delivery_hour'] = $slotHours ;
-        }
 
-        $sessionData = $_SESSION;
         $sessionData["deliveryDay"] = $deliveryDay;
         $sessionData["slotHours"] = $slotHours;
         $sessionData["userComment"] = $userComment;
         $sessionData["orderNumber"] = $orderNumber;
+        $_SESSION["deliveryDay"] = $deliveryDay;
+        $_SESSION["slotHours"] = $slotHours;
+        $_SESSION["userComment"] = $userComment;
+        $_SESSION["orderNumber"] = $orderNumber;
 
+        if (!empty($order)) {
+            $order->orderAttributes['delivery_day'] = $deliveryDay ;
+            $order->orderAttributes['delivery_hour'] = $slotHours ;
+        }
         $this->httpPost('https://app.nackad.at/api/v1/webhooks/new-rexeat-order', $sessionData);
+    }
+
+    /**
+     *
+     * @param \Enlight_Event_EventArgs $args
+     * @Enlight\Event Shopware_Modules_Order_SaveOrder_FilterParams
+     */
+    public function saveOrderFilterParams(\Enlight_Event_EventArgs $args)
+    {
+        $order = $args->getSubject();
+        $deliverySlot = Shopware()->Session()->deliverySlot;
+        $deliveryValues = explode("x",$deliverySlot);
+        $deliveryDay = $deliveryValues[0];
+        $slotHours = $deliveryValues[1];
+        $order->orderAttributes['delivery_day'] = $deliveryDay ;
+        $order->orderAttributes['delivery_hour'] = $slotHours ;
     }
 
     public function httpPost($url, $data)
     {
-        $data["Shopware"]["sOrderVariables"]["sUserData"]["additional"]["user"]["password"] = "XXXX";
         // Convert the data array into a JSON string
-        $jsonData = json_encode($data,JSON_PRETTY_PRINT) ;
-
+        $jsonData = json_encode($_SESSION, JSON_PRETTY_PRINT) ;
         // Set up the cURL request
         $ch = curl_init($url);
 

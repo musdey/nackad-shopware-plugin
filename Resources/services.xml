@@ -5,14 +5,19 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
+
         <service id="nackad_plugin.subscriber.route" class="NackadPlugin\Subscriber\RouteSubscriber">
             <argument>%nackad_plugin.plugin_name%</argument>
             <argument>%nackad_plugin.plugin_dir%</argument>
-
             <argument type="service" id="nackad_plugin.get_slots" />
             <argument type="service" id="shopware.plugin.cached_config_reader" />
-
             <tag name="shopware.event_subscriber" />
+        </service>
+
+        <service id="nackad_plugin.subscriber.add_js" class="NackadPlugin\Subscriber\AddJs">
+            <argument id="service_container" type="service"/>
+            <argument>%nackad_plugin.plugin_dir%</argument>
+            <tag name="shopware.event_subscriber"/>
         </service>
 
         <service id="nackad_plugin.get_slots" class="NackadPlugin\Components\DeliverySlot" />
